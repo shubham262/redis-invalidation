@@ -1,3 +1,4 @@
+import { generateProduct } from "../helper/index.js";
 import db from "../model/index.js";
 const { Product } = db;
 export const getProductsController = async (req, res) => {
@@ -13,7 +14,7 @@ export const getProductsController = async (req, res) => {
 
 export const seedProductsController = async (req, res) => {
 	try {
-		const count = req.body.count || 1000;
+		const count = req?.body?.count || 1000;
 		const products = Array.from({ length: count }, (_, i) =>
 			generateProduct(i + 1)
 		);

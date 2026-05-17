@@ -105,7 +105,7 @@ function generateSlug(name, brand, index) {
 		.replace(/(^-|-$)/g, "");
 }
 
-function generateProduct(index) {
+export const generateProduct = (index) => {
 	const category = getRandom(categories);
 	const brand = getRandom(brands[category]);
 	const name = getRandom(productNames[category]);
@@ -132,4 +132,4 @@ function generateProduct(index) {
 		),
 		imageUrl: `https://picsum.photos/seed/${index}/400/400`,
 	};
-}
+};

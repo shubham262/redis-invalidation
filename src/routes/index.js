@@ -1,7 +1,10 @@
 import express from "express";
-import { getDetailsController } from "../controllers/index.js";
+import {
+	getProductsController,
+	seedProductsController,
+} from "../controllers/index.js";
 const router = express.Router();
-router.get("/", getDetailsController);
-router.post("/seed",seedProductsController)
+router.get("/", getProductsController);
+router.post("/seed", seedProductsController);
 
 export default router;
