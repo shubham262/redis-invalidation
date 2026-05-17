@@ -1,18 +1,34 @@
 import { generateProduct } from "../helper/index.js";
+import redis from "../config/index.js";
 import db from "../model/index.js";
 const { Product } = db;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const createCacheKey = (query) => {
+	const { category = "all", status = "active", page = 1, limit = 20 } = query;
+	return `products:${category}:${status}:page=${page}:limit=${limit}`;
+};
+
 export const getProductsController = async (req, res) => {
 	try {
+		// const cacheKey = createCacheKey(req.query);
+		// const cached = await redis.get(cacheKey);
+		// if (cached) {
+		// 	return res.status(200).json({
+		// 		success: true,
+		// 		source: "cache",
+		// 		...cached,
+		// 	});
+		// }
+
 		const { category, status = "active", page = 1, limit = 20 } = req.query;
 		const filter = { status };
 		if (category) filter.category = category;
 
 		const skip = (Number(page) - 1) * Number(limit);
 
-		await sleep(700)
+		await sleep(700);
 
 		const [products, total] = await Promise.all([
 			Product.find(filter)
@@ -23,9 +39,7 @@ export const getProductsController = async (req, res) => {
 			Product.countDocuments(filter), // N+1 style: two separate DB calls
 		]);
 
-		return res.status(200).json({
-			success: true,
-			source: "database",
+		const response = {
 			pagination: {
 				total,
 				page: Number(page),
@@ -33,6 +47,13 @@ export const getProductsController = async (req, res) => {
 				totalPages: Math.ceil(total / Number(limit)),
 			},
 			data: products,
+		};
+		// await redis.set(cacheKey, response, { ex: 60 });
+
+		return res.status(200).json({
+			success: true,
+			source: "database",
+			...response,
 		});
 	} catch (error) {
 		console.log("error==>getDetailsController", error);
