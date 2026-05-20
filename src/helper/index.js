@@ -133,3 +133,8 @@ export const generateProduct = (index) => {
 		imageUrl: `https://picsum.photos/seed/${index}/400/400`,
 	};
 };
+
+export const createCacheKey = (query) => {
+	const { category = "all", status = "active", page = 1, limit = 20 } = query;
+	return `products:${category}:${status}:page=${page}:limit=${limit}`;
+};
