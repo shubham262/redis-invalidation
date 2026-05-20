@@ -9,7 +9,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const getProductsController = async (req, res) => {
 	try {
-		const cacheKey = createCacheKey(req.query || {});
+		const cacheKey = await createCacheKey(req.query || {});
 		const cached = await redis.get(cacheKey);
 		if (cached) {
 			return res.status(200).json({
@@ -61,38 +61,52 @@ export const getProductsController = async (req, res) => {
 	}
 };
 
+///cahce versioning
 const updateExistingCache = async () => {
 	try {
-		const cacheKey = createCacheKey({})
-		const status = "active",
-			page = 1,
-			limit = 20;
-		const filter = { status };
-
-		const skip = (Number(page) - 1) * Number(limit);
-		const [products, total] = await Promise.all([
-			Product.find(filter)
-				.sort({ createdAt: -1 })
-				.skip(skip)
-				.limit(Number(limit))
-				.lean(), // lean() returns plain JS objects — faster than Mongoose docs
-			Product.countDocuments(filter), // N+1 style: two separate DB calls
-		]);
-
-		const response = {
-			pagination: {
-				total,
-				page: Number(page),
-				limit: Number(limit),
-				totalPages: Math.ceil(total / Number(limit)),
-			},
-			data: products,
-		};
-		await redis.set(cacheKey, response, { ex: 60 });
+		// const cacheKey = createCacheKey({});
+		
+		
+		await redis.incr("VERSION");
 	} catch (error) {
 		console.log("error==>updateExistingCache", error);
 	}
 };
+
+// write throgh apporach
+
+// const updateExistingCache = async () => {
+// 	try {
+// 		const cacheKey = createCacheKey({});
+// 		const status = "active",
+// 			page = 1,
+// 			limit = 20;
+// 		const filter = { status };
+
+// 		const skip = (Number(page) - 1) * Number(limit);
+// 		const [products, total] = await Promise.all([
+// 			Product.find(filter)
+// 				.sort({ createdAt: -1 })
+// 				.skip(skip)
+// 				.limit(Number(limit))
+// 				.lean(), // lean() returns plain JS objects — faster than Mongoose docs
+// 			Product.countDocuments(filter), // N+1 style: two separate DB calls
+// 		]);
+
+// 		const response = {
+// 			pagination: {
+// 				total,
+// 				page: Number(page),
+// 				limit: Number(limit),
+// 				totalPages: Math.ceil(total / Number(limit)),
+// 			},
+// 			data: products,
+// 		};
+// 		await redis.set(cacheKey, response, { ex: 60 });
+// 	} catch (error) {
+// 		console.log("error==>updateExistingCache", error);
+// 	}
+// };
 
 export const updateProductController = async (req, res) => {
 	try {

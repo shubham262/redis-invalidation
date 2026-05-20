@@ -1,3 +1,5 @@
+import redis from "../config/index.js";
+
 const categories = [
 	"electronics",
 	"clothing",
@@ -134,7 +136,17 @@ export const generateProduct = (index) => {
 	};
 };
 
-export const createCacheKey = (query) => {
+export const getCurrentVersion = async () => {
+	let version = await redis.get("VERSION");
+	if (!version) {
+		version = await redis.set("VERSION", 1);
+	}
+	return version;
+};
+
+export const createCacheKey = async (query) => {
 	const { category = "all", status = "active", page = 1, limit = 20 } = query;
-	return `products:${category}:${status}:page=${page}:limit=${limit}`;
+
+	const currentVersion = await getCurrentVersion();
+	return `v${currentVersion}:products:${category}:${status}:page=${page}:limit=${limit}`;
 };
